@@ -1,0 +1,63 @@
+# Create parameters for EC2
+Parameters:
+  image:
+    Description: This is the AWS AMI standard image
+    Type: String
+    Default: ami-0c02fb55956c7d316
+    AllowedValues:
+    - ami-0c02fb55956c7d316
+    - ami-03e0b06f01d45a4eb
+  chassis:
+    Description: This is the virtual chassis of the VM
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+    - t2.micro
+    - t2.small
+  key:
+    Description: This is the security key name
+    Type: String
+    Default: demo-key
+    AllowedValues:
+    - demo-key
+    - vockey
+  subnetCondition:
+    Description: Choose between private and public
+    Type: String
+    AllowedValues:
+    - PublicSubnetA
+    - PrivateSubnetA
+
+# If the selected parameter in subnetCondition is PublicSubnetA then it is public
+Conditions:
+  IsPublic: !Equals
+    - !Ref subnetCondition
+    - PublicSubnetA
+
+# Define EC2 Instance 
+Resources:
+  newInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref image
+      InstanceType: !Ref chassis
+      KeyName: !Ref key
+      SecurityGroupIds:
+      - !ImportValue allow2280
+      SubnetId: 
+        !If
+        - IsPublic
+        - !ImportValue PublicSubnetA
+        - !ImportValue PrivateSubnetA   # Else Private
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            yum install httpd -y
+            cd /var/www/html
+            echo "<html><body><h1> Hello from $(hostname -f)</h1>" > index.html
+            systemctl restart httpd
+            systemctl enable httpd
+      Tags:
+      - Key: Name
+        Value: !Sub VM-${AWS::StackName}

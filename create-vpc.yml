@@ -1,0 +1,141 @@
+#This template creates a full VPC
+Description: This makes a VPC with conditions for a public and private subnet
+Parameters:
+  vpcName:
+    Description: Enter the VPC name (VPC-<name>)
+    Type: String
+  cidrVPC:
+    Description: Enter the CIDR Block for the entire VPC
+    Type: String
+  publicCidr:
+    Description: Enter the CIDR block for the public subnet
+    Type: String
+  privateCidr:
+    Description: Enter the CIDR block for the private subnet
+    Type: String
+  availabilityZones:
+    Description: The list of Availability Zones to use for the subnets in the VPC.
+    Type: List<AWS::EC2::AvailabilityZone::Name>
+
+
+Resources:
+# Create new VPC
+  newVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref cidrVPC
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+      - Key: Name
+        Value: !Join ["",["VPC-", !Ref vpcName]]
+
+# Create Internet Gateway and attach it to VPC
+  igw:
+    Type: AWS::EC2::InternetGateway
+    DependsOn: newVPC
+  attachigw:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref newVPC
+      InternetGatewayId: !Ref igw
+
+# Create Public Subnet
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref newVPC
+      MapPublicIpOnLaunch: True
+      CidrBlock: !Ref publicCidr
+      AvailabilityZone: !Select [0, !Ref availabilityZones] 
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-PublicSNA
+
+# Create Private Subnet
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref newVPC
+      CidrBlock: !Ref privateCidr
+      AvailabilityZone: !Select [0, !GetAZs ]
+      Tags:
+      - Key: Name
+        Value: !Sub ${AWS::StackName}-PrivateSNA
+
+# create a public route table
+  PublicRT:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref newVPC
+      Tags:
+      - Key: Name
+        Value: PublicRT
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: attachigw
+    Properties:
+      RouteTableId: !Ref PublicRT
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref igw
+
+# Create a private route table
+  PrivateRT: 
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref newVPC
+      Tags: 
+      - Key: Name
+        Value: PrivateRT 
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRT
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+# Create the EIP
+  ElasticIpAddress:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: newVPC
+
+# Create NAT gateway
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt ElasticIpAddress.AllocationId
+      SubnetId: !Ref PublicSubnetA
+
+# Associate the public route table and the subnet
+  PublicSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRT
+
+# Associate the private route table and the subnet
+  PrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRT
+
+# Create Output for VPC
+Outputs:
+  vpcId:
+    Description: The ID of the VPC
+    Value: !Ref newVPC
+    Export:
+      Name: mariaVPC
+  PublicSubnet:
+    Description: public subnet
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: PublicSubnetA
+  PrivateSubnet:
+    Description: private subnet
+    Value: !Ref PrivateSubnetA
+    Export:
+      Name: PrivateSubnetA
+

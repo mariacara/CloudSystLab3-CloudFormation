@@ -1,0 +1,45 @@
+# Create parameters for user to input security rule information
+Parameters:
+  sgDescription:
+    Description: Enter the security group description
+    Type: String
+  ipAddress:
+    Description: Enter the CIDR block that for traffic that is permitted
+    Type: String
+  1stRule:
+    Description: Enter the port number of application to allow for the first rule
+    Type: String
+  2ndRule:
+    Description: Enter the port number of application to allow for the second rule
+    Type: String
+  protocolType:
+    Description: Enter the IP Protocol type (tcp, udp)
+    Type: String
+
+# Create Security group
+Resources:
+  mcSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue mariaVPC
+      GroupDescription: !Ref sgDescription
+      SecurityGroupIngress:
+      - CidrIp: !Ref ipAddress
+        IpProtocol: tcp
+        FromPort: !Ref 1stRule
+        ToPort: !Ref 1stRule
+      - CidrIp: !Ref ipAddress
+        IpProtocol: tcp
+        FromPort: !Ref 2ndRule
+        ToPort: !Ref 2ndRule
+      Tags:
+      - Key: Name
+        Value: mariaVPC-SG
+
+# Create Output for security group
+Outputs:
+  sgValue:
+    Description: The ID of the Security Group
+    Value: !Ref mcSG
+    Export:
+      Name: allow2280
