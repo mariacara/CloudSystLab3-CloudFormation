@@ -6,7 +6,7 @@ The first CloudFormation stack created used the create-vpc.yml template file. Th
 
 The image below, describes the parameters selected while creating the stack. Notice under **availabilityZone**, both us-east-1a and us-east-1b were selected as examples. However, in the create-vpc.yml the first availabilityZone will be selected - this can be modified by changing the value selected here: ```AvailabilityZone: !Select [0, !Ref availabilityZones] ```
 
-![alt text](Images/create-vpc.png | width=100)
+![alt text](Images/create-vpc.png)
 
 
 
@@ -23,10 +23,15 @@ The second CloudFormation stack creates a security group that can be configured 
 
 ## create-ec2.yml
 The final yaml file contains a template to create an EC2 Webserver instance. The configuration includes conditionals to select whether the EC2 should be placed in a private or public subnet, which the user selects in the parameters as shown below:
+
 ![alt text](Images/create-EC2-public.png)
+
+
 
 Below displays the two instances created, one in the public subnet and the other in the private subnet:
 ![alt text](Images/instances.png)
+
+
 
 ## Testing the Webserver in the Public Subnet
 
