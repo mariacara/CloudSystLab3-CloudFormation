@@ -5,10 +5,13 @@ In this lab three yaml files are created to deploy the AWS infrasture using Clou
 The first CloudFormation stack created used the create-vpc.yml template file. This file configures a new VPC with a private and public subnet. A route table is created for each subnet and then associated. An Internet Gateway is created and attached to the VPC, as well as a NAT gateway that is used for outbound traffic for the private subnet.
 
 The image below, describes the parameters selected while creating the stack. Notice under **availabilityZone**, both us-east-1a and us-east-1b were selected as examples. However, in the create-vpc.yml the first availabilityZone will be selected - this can be modified by changing the value selected here: ```AvailabilityZone: !Select [0, !Ref availabilityZones] ```
-![alt text](Images/create-vpc.png)
+
+![alt text](Images/create-vpc.png=400x400)
+
 
 
 The following image describes the entire infrastructure that was created through create-vpc.yml.
+
 ![alt text](Images/vpc-designer.png)
 
 
@@ -25,7 +28,7 @@ The final yaml file contains a template to create an EC2 Webserver instance. The
 Below displays the two instances created, one in the public subnet and the other in the private subnet:
 ![alt text](Images/instances.png)
 
-#### Testing the Webserver in the Public Subnet
+## Testing the Webserver in the Public Subnet
 
 The public IP address attached to the public webserver was used to test the EC2 configuration, and the website is succesfully reached.
 ![alt text](Images/testing-publicweb.png)
