@@ -6,7 +6,7 @@ The first CloudFormation stack created used the create-vpc.yml template file. Th
 
 The image below, describes the parameters selected while creating the stack. Notice under **availabilityZone**, both us-east-1a and us-east-1b were selected as examples. However, in the create-vpc.yml the first availabilityZone will be selected - this can be modified by changing the value selected here: ```AvailabilityZone: !Select [0, !Ref availabilityZones] ```
 
-![alt text](Images/create-vpc.png=400x400)
+![alt text](Images/create-vpc.png =400x400)
 
 
 
